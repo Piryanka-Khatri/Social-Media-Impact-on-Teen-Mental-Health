@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Wellness Predictor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0c10;
+      --surface:   #111318;
+      --card:      #161a22;
+      --border:    #252b38;
+      --accent:    #5ef0a0;
+      --accent2:   #3dd8ff;
+      --warn:      #ff6b6b;
+      --text:      #e8edf5;
+      --muted:     #6b7589;
+      --radius:    14px;
+      --glow:      0 0 28px rgba(94,240,160,.18);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── noise grain overlay ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── glowing orbs ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(90px);
+      opacity: .25;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb1 { width: 500px; height: 500px; background: var(--accent); top: -180px; right: -120px; }
+    .orb2 { width: 400px; height: 400px; background: var(--accent2); bottom: -150px; left: -100px; }
+
+    /* ── layout ── */
+    .page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 60px 24px 80px; }
+
+    /* ── header ── */
+    header { text-align: center; margin-bottom: 56px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(94,240,160,.1); border: 1px solid rgba(94,240,160,.25);
+      color: var(--accent); font-size: 11px; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: 5px 14px; border-radius: 100px; margin-bottom: 20px;
+    }
+    .badge span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 6vw, 3.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.03em;
+      background: linear-gradient(135deg, #fff 30%, var(--accent) 70%, var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      margin-bottom: 14px;
+    }
+    header p {
+      color: var(--muted); font-size: 1rem; max-width: 500px; margin: 0 auto;
+    }
+
+    /* ── form card ── */
+    .form-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 40px 40px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 24px 80px rgba(0,0,0,.45);
+    }
+
+    .section-label {
+      font-family: 'Syne', sans-serif;
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .section-label::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+
+    label {
+      font-size: 12px; font-weight: 500;
+      color: var(--muted); letter-spacing: .04em;
+    }
+
+    input[type="number"],
+    select {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+      appearance: none;
+    }
+    input[type="number"]:focus,
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(94,240,160,.12);
+    }
+    input[type="number"]::placeholder { color: var(--muted); }
+    /* hide number arrows */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+    select option { background: var(--surface); }
+
+    /* ── range slider ── */
+    .range-field { display: flex; flex-direction: column; gap: 7px; }
+    .range-header { display: flex; justify-content: space-between; align-items: center; }
+    .range-header label { font-size: 12px; font-weight: 500; color: var(--muted); letter-spacing: .04em; }
+    .range-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px; font-weight: 700; color: var(--accent);
+      background: rgba(94,240,160,.1); border-radius: 6px;
+      padding: 1px 8px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px;
+      background: var(--border);
+      border-radius: 2px; outline: none; cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(94,240,160,.5);
+      transition: transform .2s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+
+    /* ── submit button ── */
+    .btn-wrap { margin-top: 8px; }
+    button[type="submit"] {
+      width: 100%;
+      padding: 15px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border: none; border-radius: var(--radius);
+      color: #0a0c10;
+      font-family: 'Syne', sans-serif;
+      font-size: 15px; font-weight: 700;
+      letter-spacing: .04em;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s, opacity .2s;
+      box-shadow: var(--glow);
+    }
+    button[type="submit"]:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(94,240,160,.35); }
+    button[type="submit"]:active { transform: translateY(0); }
+    button[type="submit"]:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+    /* ── loader ── */
+    .loader-wrap { display: none; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; color: var(--muted); font-size: 13px; }
+    .loader-wrap.show { display: flex; }
+    .spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── result card ── */
+    #result { margin-top: 32px; display: none; }
+    #result.show { display: block; animation: fadeUp .4s ease forwards; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+
+    .result-card {
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+    }
+    .result-header {
+      padding: 24px 32px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .result-header.low  { background: rgba(94,240,160,.08); border-bottom: 1px solid rgba(94,240,160,.2); }
+    .result-header.high { background: rgba(255,107,107,.08); border-bottom: 1px solid rgba(255,107,107,.2); }
+
+    .result-icon {
+      font-size: 2.4rem;
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .low  .result-icon { background: rgba(94,240,160,.12); }
+    .high .result-icon { background: rgba(255,107,107,.12); }
+
+    .result-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.4rem; font-weight: 800;
+    }
+    .low  .result-title { color: var(--accent); }
+    .high .result-title { color: var(--warn); }
+
+    .result-subtitle { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+    .result-body { padding: 28px 32px; background: var(--card); }
+
+    .prob-bars { display: flex; flex-direction: column; gap: 14px; }
+    .prob-row { display: flex; flex-direction: column; gap: 6px; }
+    .prob-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); }
+    .prob-label span:last-child { color: var(--text); font-weight: 500; }
+    .bar-bg { height: 7px; background: var(--border); border-radius: 4px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 1s cubic-bezier(.4,0,.2,1); width: 0; }
+    .bar-low  { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+    .bar-high { background: linear-gradient(90deg, var(--warn), #ffaa44); }
+
+    /* ── error ── */
+    .error-box {
+      margin-top: 20px;
+      background: rgba(255,107,107,.08);
+      border: 1px solid rgba(255,107,107,.25);
+      color: var(--warn);
+      padding: 14px 18px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      display: none;
+    }
+    .error-box.show { display: block; }
+
+    /* ── footer ── */
+    footer {
+      text-align: center; margin-top: 48px;
+      color: var(--muted); font-size: 12px;
+    }
+
+    @media (max-width: 520px) {
+      .form-card { padding: 28px 20px; }
+      .result-header, .result-body { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="page">
+    <header>
+      <div class="badge"><span></span> Health Assessment Tool</div>
+      <h1>MindScan</h1>
+      <p>Analyze how daily habits and social media usage may relate to mental well-being patterns.</p>
+    </header>
+
+    <div class="form-card">
+      <form id="predictForm" novalidate>
+
+        <!-- Personal Info -->
+        <div class="section-label">Personal Information</div>
+        <div class="grid">
+          <div class="field">
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" placeholder="e.g. 21" min="10" max="100" required />
+          </div>
+          <div class="field">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" required>
+              <option value="" disabled selected>Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Daily Habits -->
+        <div class="section-label">Daily Habits</div>
+        <div class="grid">
+          <div class="range-field">
+            <div class="range-header">
+              <label for="sleep">Sleep Hours / Night</label>
+              <span class="range-val" id="sleepVal">7</span>
+            </div>
+            <input type="range" id="sleep" name="sleep_hours" min="2" max="12" step="0.1" value="7"
+              oninput="document.getElementById('sleepVal').textContent=parseFloat(this.value).toFixed(1)" />
+          </div>
+          <div class="range-field">
+            <div class="range-header">
+              <label for="physical">Physical Activity (hrs/day)</label>
+              <span class="range-val" id="physicalVal">1</span>
+            </div>
+            <input type="range" id="physical" name="physical_activity" min="0" max="8" step="0.1" value="1"
+              oninput="document.getElementById('physicalVal').textContent=parseFloat(this.value).toFixed(1)" />
+          </div>
+          <div class="range-field">
+            <div class="range-header">
+              <label for="academic">Academic Performance (0–10)</label>
+              <span class="range-val" id="academicVal">7</span>
+            </div>
+            <input type="range" id="academic" name="academic_performance" min="0" max="10" step="0.1" value="7"
+              oninput="document.getElementById('academicVal').textContent=parseFloat(this.value).toFixed(1)" />
+          </div>
+        </div>
+
+        <!-- Social Media -->
+        <div class="section-label">Social Media Usage</div>
+        <div class="grid">
+          <div class="range-field">
+            <div class="range-header">
+              <label for="social_media">Daily Social Media (hrs)</label>
+              <span class="range-val" id="socialMediaVal">3</span>
+            </div>
+            <input type="range" id="social_media" name="daily_social_media_hours" min="0" max="16" step="0.1" value="3"
+              oninput="document.getElementById('socialMediaVal').textContent=parseFloat(this.value).toFixed(1)" />
+          </div>
+          <div class="range-field">
+            <div class="range-header">
+              <label for="screen_time">Screen Time Before Sleep (hrs)</label>
+              <span class="range-val" id="screenVal">1</span>
+            </div>
+            <input type="range" id="screen_time" name="screen_time_before_sleep" min="0" max="6" step="0.1" value="1"
+              oninput="document.getElementById('screenVal').textContent=parseFloat(this.value).toFixed(1)" />
+          </div>
+          <div class="field">
+            <label for="platform">Primary Platform</label>
+            <select id="platform" name="platform_usage" required>
+              <option value="" disabled selected>Choose platform</option>
+              <option value="Instagram">Instagram</option>
+              <option value="TikTok">TikTok</option>
+              <option value="both">Both</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="social_level">Social Interaction Level</label>
+            <select id="social_level" name="social_interaction_level" required>
+              <option value="" disabled selected>Choose level</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-wrap">
+          <button type="submit" id="submitBtn">Analyze My Mental Health →</button>
+        </div>
+      </form>
+
+      <div class="loader-wrap" id="loader">
+        <div class="spinner"></div>
+        <span>Running prediction model…</span>
+      </div>
+
+      <div class="error-box" id="errorBox"></div>
+    </div>
+
+    <!-- Result -->
+    <div id="result">
+      <div class="result-card">
+        <div class="result-header" id="resultHeader">
+          <div class="result-icon" id="resultIcon"></div>
+          <div>
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-subtitle" id="resultSubtitle"></div>
+          </div>
+        </div>
+        <div class="result-body">
+          <div class="prob-bars">
+            <div class="prob-row">
+              <div class="prob-label">
+                <span>Low Risk Probability</span>
+                <span id="lowPct">—</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill bar-low" id="barLow"></div></div>
+            </div>
+            <div class="prob-row">
+              <div class="prob-label">
+                <span>High Risk Probability</span>
+                <span id="highPct">—</span>
+              </div>
+              <div class="bar-bg"><div class="bar-fill bar-high" id="barHigh"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      MindScan · Behavioral Pattern Analysis Tool · For educational use only
+    </footer>
+  </div>
+
+  <script>
+    const API_BASE = "http://127.0.0.1:8000";
+
+    document.getElementById('predictForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const btn = document.getElementById('submitBtn');
+      const loader = document.getElementById('loader');
+      const errorBox = document.getElementById('errorBox');
+      const result = document.getElementById('result');
+
+      // reset
+      errorBox.className = 'error-box';
+      result.className = '';
+
+      // validate required selects
+      const gender = form.gender.value;
+      const platform = form.platform_usage.value;
+      const social = form.social_interaction_level.value;
+      if (!gender || !platform || !social || !form.age.value) {
+        errorBox.textContent = "Please fill in all required fields.";
+        errorBox.classList.add('show');
+        return;
+      }
+
+      btn.disabled = true;
+      loader.classList.add('show');
+
+      const payload = {
+        age: parseInt(form.age.value),
+        daily_social_media_hours: parseFloat(form.daily_social_media_hours.value),
+        sleep_hours: parseFloat(form.sleep_hours.value),
+        screen_time_before_sleep: parseFloat(form.screen_time_before_sleep.value),
+        academic_performance: parseFloat(form.academic_performance.value),
+        physical_activity: parseFloat(form.physical_activity.value),
+        gender: gender,
+        platform_usage: platform,
+        social_interaction_level: social
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        const data = await res.json();
+
+        if (data.error) throw new Error(data.error);
+
+        showResult(data);
+      } catch (err) {
+        errorBox.textContent = `⚠ ${err.message}. Make sure the FastAPI server is running at ${API_BASE}.`;
+        errorBox.classList.add('show');
+      } finally {
+        btn.disabled = false;
+        loader.classList.remove('show');
+      }
+    });
+
+    function showResult(data) {
+      const isHigh = data.prediction === 1;
+      const prob = data.probability; // [low_prob, high_prob]
+      const lowP = Math.round(prob[0] * 100);
+      const highP = Math.round(prob[1] * 100);
+
+      const header = document.getElementById('resultHeader');
+      const icon = document.getElementById('resultIcon');
+      const title = document.getElementById('resultTitle');
+      const subtitle = document.getElementById('resultSubtitle');
+
+      header.className = `result-header ${isHigh ? 'high' : 'low'}`;
+      icon.textContent = isHigh ? '⚠️' : '✅';
+      title.textContent = isHigh ? 'Higher Mental Health Risk' : 'Lower Mental Health Risk';
+      subtitle.textContent = isHigh
+        ? 'Your usage patterns may be associated with mental health challenges.'
+        : 'Your habits appear relatively balanced. Keep taking care of yourself!';
+
+      document.getElementById('lowPct').textContent = `${lowP}%`;
+      document.getElementById('highPct').textContent = `${highP}%`;
+
+      const result = document.getElementById('result');
+      result.classList.add('show');
+
+      // animate bars after paint
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          document.getElementById('barLow').style.width = `${lowP}%`;
+          document.getElementById('barHigh').style.width = `${highP}%`;
+        }, 100);
+      });
+
+      result.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  </script>
+</body>
+</html>
