@@ -76,20 +76,6 @@ def predict(data: InputData):
         insta, tiktok = encode_platform(data.platform_usage)
         low, medium = encode_social(data.social_interaction_level)
 
-        # input_list = [
-        #     data.age,
-        #     data.daily_social_media_hours,
-        #     data.sleep_hours,
-        #     data.screen_time_before_sleep,
-        #     data.academic_performance,
-        #     data.physical_activity,
-        #     gender_male,
-        #     insta,
-        #     tiktok,
-        #     low,
-        #     medium
-        # ]
-
         input_dict = {
             "age": data.age,
             "daily_social_media_hours": data.daily_social_media_hours,
@@ -104,7 +90,6 @@ def predict(data: InputData):
             "social_interaction_level_medium": medium
         }
 
-        # x = np.array(input_list).reshape(1, -1)
         x = np.array([input_dict[col] for col in features]).reshape(1, -1)
         x_scaled = scaler.transform(x)
 
