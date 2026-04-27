@@ -67,3 +67,9 @@ The dataset was imbalanced.
 - JavaScript (Fetch API)
 
 ---
+
+## 📸 Output Preview
+
+After entering user data, the system predicts mental health risk along with probability scores:
+
+![Output Screenshot](Frontend/output.png)
