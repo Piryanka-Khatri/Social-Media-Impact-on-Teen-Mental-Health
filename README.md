@@ -15,7 +15,7 @@ An AI-powered web application that predicts mental health risk levels based on d
 
 ## 📊 Dataset Description
 
-The model is trained on behavioral and lifestyle data including:
+The model is trained on behavioral and lifestyle data, including:
 
 - Age
 - Daily Social Media Usage
@@ -48,8 +48,8 @@ Multiple models were tested including:
 The dataset was imbalanced.
 
 - Tried SMOTE (Synthetic Minority Oversampling Technique)
-- However final deployment model used original preprocessing pipeline
-- Logistic Regression gave best tradeoff between accuracy and stability
+- However, the final deployment model used the original preprocessing pipeline
+- Logistic Regression gave the best tradeoff between accuracy and stability
 
 ---
 
